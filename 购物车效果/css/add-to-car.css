@@ -9,6 +9,7 @@
   margin-top: -20rem;
   left: 0;
   top: 0;
+  transition: 1s;
 }
 
 .add-to-car .iconfont {

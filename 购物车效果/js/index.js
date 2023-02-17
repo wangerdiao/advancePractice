@@ -1,4 +1,3 @@
-console.log(goods);
 //对单个商品的包装
 class UIGoods {
     constructor(g) {
@@ -75,6 +74,7 @@ class UI {
     constructor() {
         const uiData = new UIData()
         this.uiData = uiData
+        //获取界面中所需要的dom元素
         this.doms = {
             goodsContainer: document.querySelector('.goods-list'),
             deliveryPrice: document.querySelector('.footer-car-tip'),
@@ -84,8 +84,17 @@ class UI {
             car: document.querySelector('.footer-car'),
             badge: document.querySelector('.footer-car-badge'),
         }
+        //获取图片跳到最终位置的坐标
+        let carRect = this.doms.car.getBoundingClientRect();
+        let jumpTarget = {
+        x: carRect.left + carRect.width / 2,
+        y: carRect.top + carRect.height / 5,
+        };
+        this.jumpTarget = jumpTarget;
+
         this.createHMTL()
         this.updateFooter()
+        this.listenEvent()
     }
     //创建HTML元素
     createHMTL() {
@@ -125,6 +134,7 @@ class UI {
         this.uiData.increase(index)
         this.updatePage(index)
         this.updateFooter()
+        this.jump(index)
     }
     //商品数量-1
     decrease(index) {
@@ -171,5 +181,63 @@ class UI {
       // 设置购物车中的数量
       this.doms.badge.textContent = this.uiData.getGoodsInCar();
     }
+    // 监听各种事件
+    listenEvent() {
+        this.doms.car.addEventListener('animationend', function () {
+        this.classList.remove('animate');
+        });
+    }
+    // 购物车动画
+    carAnimate() {
+        this.doms.car.classList.add('animate');
+    }
+    jump(index) {
+        //获取图标起始位置的坐标
+        let btnAdd = this.doms.goodsContainer.children[index].querySelector(
+            '.i-jiajianzujianjiahao'
+          );
+          let rect = btnAdd.getBoundingClientRect();
+          console.log(rect);
+          let start = {
+            x: rect.left,
+            y: rect.top,
+          };
+          console.log(start.x,start.y);
+        //创建元素开始跳跃
+          let div = document.createElement('div');
+          div.className = 'add-to-car';
+          let i = document.createElement('i');
+          i.className = 'iconfont i-jiajianzujianjiahao';
+          // 设置初始位置
+          div.style.transform = `translate(${start.x}px,${start.y}px)`;
+          div.appendChild(i);
+          document.body.appendChild(div);
+          // 强行渲染 （为避免浏览器解析完js后才解析css，即执行完js后图标最终位置直接到了目标位置，没有中间跳跃的过程）
+          div.clientWidth;
+          // 设置结束位置
+        div.style.transform = `translate(${this.jumpTarget.x}px,${this.jumpTarget.y}px)`;
+        let that = this;
+        div.addEventListener(
+        'transitionend',
+        function () {
+            div.remove();
+            that.carAnimate();
+        },
+        {
+            once: true, // 事件仅触发一次,防止事件冒泡
+        }
+        );
+    }
 }
 const ui = new UI()
+
+// 事件
+ui.doms.goodsContainer.addEventListener('click', function (e) {
+    if (e.target.classList.contains('i-jiajianzujianjiahao')) {
+      var index = +e.target.getAttribute('index');
+      ui.increase(index);
+    } else if (e.target.classList.contains('i-jianhao')) {
+      var index = +e.target.getAttribute('index');
+      ui.decrease(index);
+    }
+  });
